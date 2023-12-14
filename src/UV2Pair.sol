@@ -22,6 +22,8 @@ contract UV2Pair is IUV2Pair, ReentrancyGuard, ERC20 {
     uint public price1CumulativeLast;
     uint public kLast;
 
+    // write some 
+
     event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
     event Mint(address indexed sender, uint amount0, uint amount1);
     
@@ -58,8 +60,33 @@ contract UV2Pair is IUV2Pair, ReentrancyGuard, ERC20 {
 
     function initialize(address, address) external {}
 
-    // create version of a mint function that can be called as is, not through a router. msg.sender should have enough balance and enough aproved amounts of token0 and token1
+   /**
+    create 2 version of a mint function that can be called as is, not through a router: 
+       - Provide liquidity to give - get shares,
+       - Provide amount of shares to mint - transfer liquidity
+    msg.sender should have enough balance and enough approved amounts of token0 and token1
+    */
+
     
+    function provideLiquidityForShare(uint amount0Desired, uint amount1Desired, uint amount0Min, uint amount1Min) external nonReentrant() returns (uint liquidity) {
+        // check if msg.sender has enough balance and enough aproved amounts of token0 and token1
+        // check xy=k
+        // transfer tokens from msg.sender to this contract
+        // update reserves
+        // calculate liquidity
+        // mint liquidity to msg.sender
+        // return liquidity
+    }
+
+    function mintShare(uint amount) external nonReentrant() returns (uint liquidity) {
+        // check if msg.sender has enough balance and enough aproved amounts of token0 and token1
+        // check xy=k
+        // transfer tokens from msg.sender to this contract
+        // update reserves
+        // calculate liquidity
+        // mint liquidity to msg.sender
+        // return liquidity
+    }
     
 
 
@@ -78,6 +105,16 @@ contract UV2Pair is IUV2Pair, ReentrancyGuard, ERC20 {
         uint32 blockTimestamp = uint32(block.timestamp % 2**32);
         uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
         
+        if (timeElapsed > 0 && _reserve0 != 0 && _reserve1 != 0) {
+            // * never overflows, and + overflow is desired
+            price0CumulativeLast += uint(_reserve1).divWadUp(uint(_reserve0)) * timeElapsed;
+            price1CumulativeLast += uint(_reserve0).divWadUp(uint( _reserve1)) * timeElapsed;
+        }
+
+        reserve0 = uint112(balance0);
+        reserve1 = uint112(balance1);
+        blockTimestampLast = blockTimestamp;
+        emit Sync(reserve0, reserve1);
     }
 
 }
