@@ -6,7 +6,7 @@ import {UV2Pair} from "./UV2Pair.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 
-contract UV2Factory is IUV2Factory, ReentrancyGuard {
+contract MockSwapFactory is IUV2Factory, ReentrancyGuard {
     address public feeTo;
     address public feeToSetter;
 
