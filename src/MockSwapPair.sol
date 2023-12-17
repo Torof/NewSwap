@@ -63,7 +63,18 @@ contract MockSwapPair is IUV2Pair, ReentrancyGuard, ERC20 {
         
     }
 
-    function swapWithApproval(uint amount0Out, uint amount1Out, address to, bytes calldata data) external nonReentrant() {
+    function swapExactInForOut(uint amount0Out, uint amount1Out, address to, bytes calldata data) external nonReentrant() {
+        // check if msg.sender has enough balance and enough aproved amounts of token0 and token1
+        // check xy=k
+        // transfer tokens from msg.sender to this contract
+        // update reserves
+        // calculate liquidity
+        // mint liquidity pool token to msg.sender
+        // return liquidity
+    }
+
+
+    function swapInForExactOut(uint amount0Out, uint amount1Out, address to, bytes calldata data) external nonReentrant() {
         // check if msg.sender has enough balance and enough aproved amounts of token0 and token1
         // check xy=k
         // transfer tokens from msg.sender to this contract
@@ -135,6 +146,8 @@ contract MockSwapPair is IUV2Pair, ReentrancyGuard, ERC20 {
         // burn lp token
         // return liquidity
     }
+
+    function flashloan() external {}
 
 
     function burn(address to) external nonReentrant() returns (uint amount0, uint amount1) {
