@@ -59,7 +59,7 @@ contract MockSwapPair is IUV2Pair, ReentrancyGuard, ERC20 {
         return "MSP";
     }
 
-    function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external nonReentrant() {
+    function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) public nonReentrant() {
         require(amount0Out > 0 || amount1Out > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         require(amount0Out < _reserve0 && amount1Out < _reserve1, 'UniswapV2: INSUFFICIENT_LIQUIDITY');
@@ -89,10 +89,14 @@ contract MockSwapPair is IUV2Pair, ReentrancyGuard, ERC20 {
         emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
     }
 
-    function swapExactInForOut(uint amount0Out, uint amount1Out, address to, bytes calldata data) external nonReentrant() {}
+    function swapExactInForOut(uint amount0Out, uint amount1Out, address to, bytes calldata data) external nonReentrant() {
+        swap(amount0Out, amount1Out, to, data);
+    }
 
 
-    function swapInForExactOut(uint amount0Out, uint amount1Out, address to, bytes calldata data) external nonReentrant() {}
+    function swapInForExactOut(uint amount0Out, uint amount1Out, address to, bytes calldata data) external nonReentrant() {
+        swap(amount0Out, amount1Out, to, data);
+    }
 
     function skim(address to) external nonReentrant() {}
 
