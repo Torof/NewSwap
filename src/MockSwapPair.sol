@@ -89,15 +89,6 @@ contract MockSwapPair is IUV2Pair, ReentrancyGuard, ERC20 {
         emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
     }
 
-    function swapExactInForOut(uint amount0Out, uint amount1Out, address to, bytes calldata data) external nonReentrant() {
-        swap(amount0Out, amount1Out, to, data);
-    }
-
-
-    function swapInForExactOut(uint amount0Out, uint amount1Out, address to, bytes calldata data) external nonReentrant() {
-        swap(amount0Out, amount1Out, to, data);
-    }
-
     function skim(address to) external nonReentrant() {}
 
     function sync() external {}
@@ -115,51 +106,11 @@ contract MockSwapPair is IUV2Pair, ReentrancyGuard, ERC20 {
     msg.sender should have enough balance and enough approved amounts of token0 and token1
     */
 
-    
-    function depositLiquidityForShare(uint amount0Desired, uint amount1Desired, uint amount0Min, uint amount1Min) external nonReentrant() returns (uint liquidity) {
-        // check if msg.sender has enough balance and enough aproved amounts of token0 and token1
-        // check xy=k
-        // transfer tokens from msg.sender to this contract
-        // update reserves
-        // calculate liquidity
-        // mint liquidity pool token to msg.sender
-        // return liquidity
-    }
-
-    function mintShareforLiquidity(uint amount) external nonReentrant() returns (uint liquidity) {
-        // check if msg.sender has enough balance and enough aproved amounts of token0 and token1
-        // check xy=k
-        // transfer tokens from msg.sender to this contract
-        // update reserves
-        // calculate liquidity
-        // mint liquidity pool token to msg.sender
-        // return liquidity
-    }
-    
-
 
     function mint(address to) external nonReentrant() returns (uint liquidity) {
 
     }
 
-    function withdrawLiquidityForShare() external nonReentrant() returns (uint amount0, uint amount1) {
-        // check if msg.sender has enough balance and enough aproved amounts of token0 and token1
-        // check xy=k
-        // transfer tokens from this contract to msg.sender
-        // update reserves
-        // calculate liquidity
-        // burn lp token
-        // return liquidity
-    }
-    function burnShareForLiquidity() external nonReentrant() returns (uint amount0, uint amount1) {
-        // check if msg.sender has enough balance and enough aproved amounts of token0 and token1
-        // check xy=k
-        // transfer tokens from this contract to msg.sender
-        // update reserves
-        // calculate liquidity
-        // burn lp token
-        // return liquidity
-    }
 
     function flashloan() external {}
 
