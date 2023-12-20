@@ -5,7 +5,7 @@ import "./interfaces/IUV2Factory.sol";
 import {IUV2Pair} from "./interfaces/IUV2Pair.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {FixedPointMathLib} from "solmate/utils/FixedPointMathLib.sol";
+import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
 import {ERC20} from "solady/tokens/ERC20.sol";
 
 // Heavily inspired by Uniswap v2, retailored to be updated to :
@@ -89,9 +89,16 @@ contract MockSwapPair is IUV2Pair, ReentrancyGuard, ERC20 {
         emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
     }
 
-    function skim(address to) external nonReentrant() {}
+    function skim(address to) external nonReentrant() {
+        address _token0 = token0; // gas savings
+        address _token1 = token1; // gas savings
+        IERC20(_token0).safeTransfer(to, IERC20(_token0).balanceOf(address(this)) -(reserve0));
+        IERC20(_token1).safeTransfer(to, IERC20(_token1).balanceOf(address(this)) - (reserve1));
+    }
 
-    function sync() external {}
+    function sync() external {
+         _update(IERC20(token0).balanceOf(address(this)), IERC20(token1).balanceOf(address(this)), reserve0, reserve1);
+    }
 
     function initialize(address _token0, address _token1) external {
         require(msg.sender == factory, "MS: FORBIDDEN"); // sufficient check
@@ -108,7 +115,26 @@ contract MockSwapPair is IUV2Pair, ReentrancyGuard, ERC20 {
 
 
     function mint(address to) external nonReentrant() returns (uint liquidity) {
+        (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
+        uint balance0 = IERC20(token0).balanceOf(address(this));
+        uint balance1 = IERC20(token1).balanceOf(address(this));
+        uint amount0 = balance0 - _reserve0;
+        uint amount1 = balance1 - (_reserve1);
 
+        bool feeOn = _mintFee(_reserve0, _reserve1);
+        uint _totalSupply = totalSupply(); // gas savings, must be defined here since totalSupply can update in _mintFee
+        if (_totalSupply == 0) {
+            liquidity = (amount0 * amount1).sqrt() - (MINIMUM_LIQUIDITY);
+           _mint(address(0), MINIMUM_LIQUIDITY); // permanently lock the first MINIMUM_LIQUIDITY tokens
+        } else {
+            liquidity = FixedPointMathLib.min(amount0 * (_totalSupply) / _reserve0, amount1 * (_totalSupply) / _reserve1);
+        }
+        require(liquidity > 0, 'UniswapV2: INSUFFICIENT_LIQUIDITY_MINTED');
+        _mint(to, liquidity);
+
+        _update(balance0, balance1, _reserve0, _reserve1);
+        if (feeOn) kLast = uint(reserve0) * (reserve1); // reserve0 and reserve1 are up-to-date
+        emit Mint(msg.sender, amount0, amount1);
     }
 
 
@@ -184,8 +210,8 @@ contract MockSwapPair is IUV2Pair, ReentrancyGuard, ERC20 {
         
         if (timeElapsed > 0 && _reserve0 != 0 && _reserve1 != 0) {
             // * never overflows, and + overflow is desired
-            price0CumulativeLast += uint(_reserve1).divWadDown(uint(_reserve0)) * timeElapsed;
-            price1CumulativeLast += uint(_reserve0).divWadDown(uint( _reserve1)) * timeElapsed;
+            price0CumulativeLast += uint(_reserve1).divWad(uint(_reserve0)) * timeElapsed;
+            price1CumulativeLast += uint(_reserve0).divWad(uint( _reserve1)) * timeElapsed;
         }
 
         reserve0 = uint112(balance0);
