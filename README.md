@@ -14,15 +14,19 @@ An revised version of UniswapV2 to work with modern standards, libraries and goo
 - Use of Openzeppelin ***safeTransfer*** and ***safeTransFrom*** ( see __{SafeERC20}__ from OpenZeppelin)
 - Use of custom error instead of require
 - Styling decisions due to version differences
-         - Rework of interfaces (to avoid inheritance collisions)
-         - use of immutable variables (to save gas and prevent variable change)
-         - reordering of variable, events, functions to follow styling conventions (better reading and accessibility)
-         - use of different sytax (min - max / constructor / payable)
+  
+    - Rework of interfaces (to avoid inheritance collisions)
+    - use of immutable variables (to save gas and prevent variable change) 
+    - reordering of variable, events, functions to follow styling conventions (better reading and accessibility)
+    - use of different sytax (min - max / constructor / payable)
+  
 - Adding of a swap function for interacting directly with smart contract:
-        - No integrated flashloan into swap but into separate function
-        - added all security checks 
+
+    - No integrated flashloan into swap but into separate function
+    - added all security checks 
 - Adding of liquidity functions (depositing and withdrawing):
-        - depositLiquidityForShare: deposit liquidity and receive equivalent LP tokens
-        - mintShareforLiquidity: mint a certain amount of shares and transfer equivalent amount of liquidity
-        - withdrawLiquidityForShare: withdraw liquidity and burn equivalent amount of shares
-        - burnShareForLiquidity: burn a certain amount of shares and receive equivalent amount of liquidity
+
+     - depositLiquidityForShare: deposit liquidity and receive equivalent LP tokens
+     - mintShareforLiquidity: mint a certain amount of shares and transfer equivalent amount of liquidity
+     - withdrawLiquidityForShare: withdraw liquidity and burn equivalent amount of shares
+     - burnShareForLiquidity: burn a certain amount of shares and receive equivalent amount of liquidity
