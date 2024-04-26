@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 import "./interfaces/IFactory.sol";
 import {IPair} from "./interfaces/IPair.sol";
+import {ICallee} from "./interfaces/ICallee.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
@@ -15,10 +16,12 @@ import {ERC20} from "solady/tokens/ERC20.sol";
 //  - No more SafeMath
 //  - External fixed point math library {FixedPointMathLib} from solady
 //  - actualized reentrancy guard {ReentrancyGuard} from OpenZeppelin
-//  - stand alone swap function without flashloan integrated
+//  - stand alone swap function with integrated security checks, without flashloan integrated
 //  - stand alone flashloan function
+//  - assume users won't be using the router, so the swap function is integrated in the pair contract
+//  - requires to custom errors
 
-contract RSwapPair is IPair, ReentrancyGuard, ERC20 {
+contract Pair is IPair, ReentrancyGuard, ERC20 {
     using SafeERC20 for IERC20;
     using FixedPointMathLib for uint256;
 
@@ -33,7 +36,7 @@ contract RSwapPair is IPair, ReentrancyGuard, ERC20 {
     uint public price1CumulativeLast;
     uint public kLast;
 
-    // write some 
+    //TODO:  write some custom errors to replace requires
 
     event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
     event Mint(address indexed sender, uint amount0, uint amount1);
@@ -54,13 +57,14 @@ contract RSwapPair is IPair, ReentrancyGuard, ERC20 {
     }
 
     function name() public override pure returns (string memory) {
-        return "ReSwapPair";
+        return "RSwapPair";
     }
 
     function symbol() public override pure returns (string memory) {
         return "RSP";
     }
 
+    //keep swap function to allow router integration
     function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) public nonReentrant() {
         require(amount0Out > 0 || amount1Out > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
@@ -74,7 +78,7 @@ contract RSwapPair is IPair, ReentrancyGuard, ERC20 {
         require(to != _token0 && to != _token1, 'UniswapV2: INVALID_TO');
         if (amount0Out > 0) IERC20(_token0).safeTransfer(to, amount0Out); // optimistically transfer tokens
         if (amount1Out > 0) IERC20(_token1).safeTransfer(to, amount1Out); // optimistically transfer tokens
-        // if (data.length > 0) IUniswapV2Callee(to).uniswapV2Call(msg.sender, amount0Out, amount1Out, data);
+        if (data.length > 0) ICallee(to).rSwapCall(msg.sender, amount0Out, amount1Out, data);
         balance0 = IERC20(_token0).balanceOf(address(this));
         balance1 = IERC20(_token1).balanceOf(address(this));
         }
@@ -89,6 +93,27 @@ contract RSwapPair is IPair, ReentrancyGuard, ERC20 {
 
         _update(balance0, balance1, _reserve0, _reserve1);
         emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
+    }
+
+    //give amount of token out desired, get amount of token in
+    //give address of token out, get address of token in
+    //verify that the amount of token out is less than the reserve
+    //0.3% fee on the amount of token in
+    //take care of slippage : input desired amount of token out, get actual amount of token out and check if it is within slippage range
+    function swapForTokenOut(address _tokenOut, uint _amountOut, uint _amountIn) public nonReentrant(){
+        require(_tokenOut == token0 || _tokenOut == token1, "RS: INVALID_TOKEN_OUT");
+        require(_amountOut > 0, "RS: INVALID_AMOUNT_OUT");
+        address tokenOut;
+        address tokenIn;
+        if(_tokenOut == token0){
+            tokenOut = token0;
+            tokenIn = token1;
+        } else {
+            tokenOut = token1;
+            tokenIn = token0;
+        }
+        require(IERC20(tokenOut).balanceOf(address(this)) >= _amountOut, "RS: INSUFFICIENT_BALANCE");
+
     }
 
     function skim(address to) external nonReentrant() {

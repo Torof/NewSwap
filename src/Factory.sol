@@ -2,11 +2,11 @@
 pragma solidity 0.8.20;
 
 import {IFactory} from "./interfaces/IFactory.sol";
-import {RSwapPair} from "./RSwapPair.sol";
+import {Pair} from "./Pair.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 
-contract MockSwapFactory is IFactory, ReentrancyGuard {
+contract Factory is IFactory, ReentrancyGuard {
     address public feeTo;
     address public feeToSetter;
 
@@ -28,12 +28,12 @@ contract MockSwapFactory is IFactory, ReentrancyGuard {
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
         require(token0 != address(0), "UV2: ZERO_ADDRESS");
         require(getPair[token0][token1] == address(0), "UV2: PAIR_EXISTS"); // single check is sufficient
-        bytes memory bytecode = type(RSwapPair).creationCode;
+        bytes memory bytecode = type(Pair).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(token0, token1));
         assembly {
             pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-        RSwapPair(pair).initialize(token0, token1);
+        Pair(pair).initialize(token0, token1);
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction
         allPairs.push(pair);
