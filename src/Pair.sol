@@ -57,11 +57,11 @@ contract Pair is IPair, ReentrancyGuard, ERC20 {
     }
 
     function name() public override pure returns (string memory) {
-        return "RSwapPair";
+        return "NewSwapPair";
     }
 
     function symbol() public override pure returns (string memory) {
-        return "RSP";
+        return "NSP";
     }
 
     //keep swap function to allow router integration
@@ -78,7 +78,7 @@ contract Pair is IPair, ReentrancyGuard, ERC20 {
         require(to != _token0 && to != _token1, 'UniswapV2: INVALID_TO');
         if (amount0Out > 0) IERC20(_token0).safeTransfer(to, amount0Out); // optimistically transfer tokens
         if (amount1Out > 0) IERC20(_token1).safeTransfer(to, amount1Out); // optimistically transfer tokens
-        if (data.length > 0) ICallee(to).rSwapCall(msg.sender, amount0Out, amount1Out, data);
+        if (data.length > 0) ICallee(to).newSwapCall(msg.sender, amount0Out, amount1Out, data);
         balance0 = IERC20(_token0).balanceOf(address(this));
         balance1 = IERC20(_token1).balanceOf(address(this));
         }
@@ -182,9 +182,8 @@ contract Pair is IPair, ReentrancyGuard, ERC20 {
         amount1 = liquidity * (balance1) / _totalSupply; // using balances ensures pro-rata distribution
         require(amount0 > 0 && amount1 > 0, 'UniswapV2: INSUFFICIENT_LIQUIDITY_BURNED');
         _burn(address(this), liquidity);
-        (bool success1) = ERC20(token0).transfer(to, amount0);
-        (bool success2) = ERC20(token1).transfer(to, amount1);
-        require(success1 && success2, "MS: TRANSFER_FAILED");
+        IERC20(token0).safeTransfer(to, amount0);
+        IERC20(token1).safeTransfer(to, amount1);
         balance0 = IERC20(_token0).balanceOf(address(this));
         balance1 = IERC20(_token1).balanceOf(address(this));
 
