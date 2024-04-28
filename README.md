@@ -1,4 +1,4 @@
-# Uniswap V2 revised
+# NewSwap, a revised Uniswap V2
 
 An revised version of UniswapV2 to work with modern standards, libraries and good practices, while more secure and gas optimal.
 
@@ -24,6 +24,7 @@ An revised version of UniswapV2 to work with modern standards, libraries and goo
 
     - No integrated flashloan into swap but into separate function
     - added all security checks 
+
 - Adding of liquidity functions (depositing and withdrawing):
 
      - depositLiquidityForShare: deposit liquidity and receive equivalent LP tokens
